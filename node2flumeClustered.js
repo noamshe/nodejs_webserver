@@ -6,10 +6,12 @@ my_http = require("http");
 var net = require('net');
 var flumeClient = new net.Socket();
 var useCppModule = true;
+var modulename = require('./build/Release/modulename');
+
 
 // This is flume tcp socket
 flumeClient.connect(81, '127.0.0.1', function() {
-    console.log('Connected');
+    console.log('Connected to flume socket');
 });
 flumeClient.on('data', function(data) {
     //console.log('Received: ' + data);
@@ -35,13 +37,15 @@ if (cluster.isMaster) {
     my_http.createServer(function(request,response){
 
         //sys.puts("I got kicked");
-        handleRequest(request, response);
+        handleRequest(request, function() {
+            writeResponse(response);
+        });
 
     }).listen(8080);
     sys.puts("Server Running on 8080");
 }
 
-function handleRequest(request, response) {
+function handleRequest(request, callback) {
     if (request.method == 'POST') {
         var body = '';
         request.on('data', function (data) {
@@ -52,30 +56,34 @@ function handleRequest(request, response) {
         });
         request.on('end', function () {
             if (useCppModule) {
-                xmlParserCppModule(body, response);
+                modulename.callback(false, function(err, result) {
+                    xmlParserCppModule(body, callback);
+                });
             } else {
-                xmlParserNodeJSModule(body, response);
+                modulename.callback(false, function(err, result) {
+                    xmlParserNodeJSModule(body, callback);
+                });
             }
         });
     }
 }
 
-function xmlParserNodeJSModule(xml, response) {
+function xmlParserNodeJSModule(xml, callback) {
     //var xml = "<id>999</id>"
     var parseString = require('xml2js').parseString;
     parseString(xml, function (err, result) {
         dataStr = JSON.stringify(result['id']);
         flumeClient.write(dataStr + "\n", function() {
-            writeResponse(response);
+            callback();
         });
     });
 }
 
-function xmlParserCppModule(xml, response) {
+function xmlParserCppModule(xml, callback) {
     var addon = require('./build/Release/hello');
     var dataStr = addon.hello(xml);
     flumeClient.write(dataStr + "\n", function() {
-        writeResponse(response);
+        callback();
     });
 }
 

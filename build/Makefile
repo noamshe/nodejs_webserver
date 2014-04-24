@@ -314,9 +314,14 @@ ifeq ($(strip $(foreach prefix,$(NO_LOAD),\
                  $(join ^,hello.target.mk)))),)
   include hello.target.mk
 endif
+ifeq ($(strip $(foreach prefix,$(NO_LOAD),\
+    $(findstring $(join ^,$(prefix)),\
+                 $(join ^,modulename.target.mk)))),)
+  include modulename.target.mk
+endif
 
 quiet_cmd_regen_makefile = ACTION Regenerating $@
-cmd_regen_makefile = cd $(srcdir); /usr/lib/node_modules/node-gyp/gyp/gyp_main.py -fmake --ignore-environment "--toplevel-dir=." -I/home/noam/myapps/node_plus_tiny/build/config.gypi -I/usr/lib/node_modules/node-gyp/addon.gypi -I/home/noam/.node-gyp/0.10.5/common.gypi "--depth=." "-Goutput_dir=." "--generator-output=build" "-Dlibrary=shared_library" "-Dvisibility=default" "-Dnode_root_dir=/home/noam/.node-gyp/0.10.5" "-Dmodule_root_dir=/home/noam/myapps/node_plus_tiny" binding.gyp
+cmd_regen_makefile = cd $(srcdir); /usr/lib/node_modules/node-gyp/gyp/gyp_main.py -fmake --ignore-environment "--toplevel-dir=." -I/home/noam/myapps/xmlNodeAndC++Parser/build/config.gypi -I/usr/lib/node_modules/node-gyp/addon.gypi -I/home/noam/.node-gyp/0.10.5/common.gypi "--depth=." "-Goutput_dir=." "--generator-output=build" "-Dlibrary=shared_library" "-Dvisibility=default" "-Dnode_root_dir=/home/noam/.node-gyp/0.10.5" "-Dmodule_root_dir=/home/noam/myapps/xmlNodeAndC++Parser" binding.gyp
 Makefile: $(srcdir)/../../.node-gyp/0.10.5/common.gypi $(srcdir)/build/config.gypi $(srcdir)/binding.gyp $(srcdir)/../../../../usr/lib/node_modules/node-gyp/addon.gypi
 	$(call do_cmd,regen_makefile)
 
