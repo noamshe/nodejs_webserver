@@ -24,7 +24,7 @@ flumeClient.on('close', function() {
 if (cluster.isMaster) {
     console.log(useCppModule ? 'Cpp Parser module' : 'NodeJS parser module');
     // Fork workers.
-    for (var i = 0; i < 6; i++) {
+    for (var i = 0; i < 3; i++) {
         cluster.fork();
     }
 
@@ -37,15 +37,13 @@ if (cluster.isMaster) {
     my_http.createServer(function(request,response){
 
         //sys.puts("I got kicked");
-        handleRequest(request, function() {
-            writeResponse(response);
-        });
+        handleRequest(request, response);
 
-    }).listen(8080);
-    sys.puts("Server Running on 8080");
+    }).listen(process.argv[2]);
+    sys.puts("Server Running on " + process.argv[2]);
 }
 
-function handleRequest(request, callback) {
+function handleRequest(request, response) {
     if (request.method == 'POST') {
         var body = '';
         request.on('data', function (data) {
@@ -57,33 +55,33 @@ function handleRequest(request, callback) {
         request.on('end', function () {
             if (useCppModule) {
                 modulename.callback(false, function(err, result) {
-                    xmlParserCppModule(body, callback);
+                    xmlParserCppModule(body, response);
                 });
             } else {
                 modulename.callback(false, function(err, result) {
-                    xmlParserNodeJSModule(body, callback);
+                    xmlParserNodeJSModule(body, response);
                 });
             }
         });
     }
 }
 
-function xmlParserNodeJSModule(xml, callback) {
+function xmlParserNodeJSModule(xml, response) {
     //var xml = "<id>999</id>"
     var parseString = require('xml2js').parseString;
     parseString(xml, function (err, result) {
         dataStr = JSON.stringify(result['id']);
         flumeClient.write(dataStr + "\n", function() {
-            callback();
+            writeResponse(response);
         });
     });
 }
 
-function xmlParserCppModule(xml, callback) {
+function xmlParserCppModule(xml, response) {
     var addon = require('./build/Release/hello');
     var dataStr = addon.hello(xml);
     flumeClient.write(dataStr + "\n", function() {
-        callback();
+        writeResponse(response);
     });
 }
 
