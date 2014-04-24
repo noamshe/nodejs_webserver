@@ -63,7 +63,6 @@ function xmlParserCppModule(xml, response) {
     });
 }
 
-
 function writeResponse(response) {
     response.writeHeader(204, {"Content-Type": "text/plain"});
     response.write("no-bid");
