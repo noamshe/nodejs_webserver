@@ -6,7 +6,19 @@ my_http = require("http");
 var net = require('net');
 var flumeClient = new net.Socket();
 var useCppModule = true;
-var modulename = require('./build/Release/modulename');
+/*
+var log4js = require('log4js');
+log4js.configure({
+    appenders: [
+        { type: 'console' },
+        { type: 'file', filename: 'cheese.log', category: 'cheese' }
+    ]
+});
+
+var logger = log4js.getLogger('cheese');
+logger.setLevel('INFO');
+logger.info("123");
+*/
 
 
 // This is flume tcp socket
@@ -22,7 +34,7 @@ flumeClient.on('close', function() {
 });
 
 if (cluster.isMaster) {
-    console.log(useCppModule ? 'Cpp Parser module' : 'NodeJS parser module');
+    console.log(useCppModule ? 'C++ Parser module' : 'NodeJS parser module');
     // Fork workers.
     for (var i = 0; i < 6; i++) {
         cluster.fork();
@@ -53,7 +65,8 @@ function handleRequest(request, response) {
             }
         });
         request.on('end', function () {
-            if (useCppModule) {
+            jsonParser(body, response);
+            /*if (useCppModule) {
                 modulename.callback(false, function(err, result) {
                     xmlParserCppModule(body, response);
                 });
@@ -61,7 +74,7 @@ function handleRequest(request, response) {
                 modulename.callback(false, function(err, result) {
                     xmlParserNodeJSModule(body, response);
                 });
-            }
+            }*/
         });
     }
 }
@@ -81,6 +94,18 @@ function xmlParserCppModule(xml, response) {
     var addon = require('./build/Release/hello');
     var dataStr = addon.hello(xml);
     flumeClient.write(dataStr + "\n", function() {
+        writeResponse(response);
+    });
+}
+
+function jsonParser(json, response) {
+    //var str = '{"id": "6495"}';
+
+// parse str into an object
+    var obj = JSON.parse(json);
+    var dataStr = obj.id;
+
+    flumeClient.write(obj.id + "\n", function() {
         writeResponse(response);
     });
 }
