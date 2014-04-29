@@ -25,6 +25,9 @@ logger.info("123");
 flumeClient.connect(81, '127.0.0.1', function() {
     console.log('Connected to flume socket');
 });
+flumeClient.on('error', function(err) {
+    console.log('Cannot connect to Flume socket');
+});
 flumeClient.on('data', function(data) {
     //console.log('Received: ' + data);
     //flumeClient.destroy(); // kill client after server's response
@@ -43,6 +46,9 @@ if (cluster.isMaster) {
     cluster.on('exit', function(worker, code, signal) {
         console.log('worker ' + worker.process.pid + ' died');
     });
+    if (!process.argv[2]) {
+        console.log('NO PORT ADDED AS ARGUMENT');
+    }
 } else {
     // Workers can share any TCP connection
     // In this case its a HTTP server
