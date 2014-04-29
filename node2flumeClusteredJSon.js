@@ -19,36 +19,38 @@ var logger = log4js.getLogger('cheese');
 logger.setLevel('INFO');
 logger.info("123");
 */
+if (!process.argv[2] || !process.argv[3] || !process.argv[4]) {
+   console.log("** missing parameters **");
+   console.log("\"" + process.argv[0] + " " + process.argv[1] + " [server Port] [flume IP] [flume Port]\"");
+   process.abort();
+}
 
 
 // This is flume tcp socket
-flumeClient.connect(81, '127.0.0.1', function() {
-    console.log('Connected to flume socket');
+flumeClient.connect(process.argv[4], process.argv[3], function() {
+    console.log('Connected to flume socket at ' + process.argv[3] + ":" + process.argv[4]);
 });
 flumeClient.on('error', function(err) {
-    console.log('Cannot connect to Flume socket');
+    console.log('ERROR can\'t connect to flume socket at ' + process.argv[3] + ":" + process.argv[4]);
 });
 flumeClient.on('data', function(data) {
     //console.log('Received: ' + data);
     //flumeClient.destroy(); // kill client after server's response
 });
 flumeClient.on('close', function() {
-    console.log('Connection closed');
+    console.log('Flume connection was closed');
 });
 
 if (cluster.isMaster) {
-    console.log(useCppModule ? 'C++ Parser module' : 'NodeJS parser module');
+    // console.log(useCppModule ? 'C++ Parser module' : 'NodeJS parser module');
     // Fork workers.
-    for (var i = 0; i < 6; i++) {
+    for (var i = 0; i < numCPUs; i++) {
         cluster.fork();
     }
 
     cluster.on('exit', function(worker, code, signal) {
         console.log('worker ' + worker.process.pid + ' died');
     });
-    if (!process.argv[2]) {
-        console.log('NO PORT ADDED AS ARGUMENT');
-    }
 } else {
     // Workers can share any TCP connection
     // In this case its a HTTP server
@@ -60,6 +62,8 @@ if (cluster.isMaster) {
     }).listen(process.argv[2]);
     sys.puts("Server Running on " + process.argv[2]);
 }
+
+
 
 function handleRequest(request, response) {
     if (request.method == 'POST') {
@@ -123,3 +127,4 @@ function writeResponse(response) {
     response.end();
 }
 
+                                       
