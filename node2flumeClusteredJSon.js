@@ -1,6 +1,6 @@
 
 var cluster = require('cluster');
-var numCPUs = require('os').cpus().length;
+var numCPUs = (process.argv[5]) ? process.argv[5] : require('os').cpus().length;
 var sys = require("sys"),
 my_http = require("http");
 var net = require('net');
@@ -21,7 +21,7 @@ logger.info("123");
 */
 if (!process.argv[2] || !process.argv[3] || !process.argv[4]) {
    console.log("** missing parameters **");
-   console.log("\"" + process.argv[0] + " " + process.argv[1] + " [server Port] [flume IP] [flume Port]\"");
+   console.log("\"" + process.argv[0] + " " + process.argv[1] + " [server Port] [flume IP] [flume Port] [# of servers (optional)]\"");
    process.abort();
 }
 
@@ -113,11 +113,13 @@ function jsonParser(json, response) {
 
 // parse str into an object
     var obj = JSON.parse(json);
-    var dataStr = obj.id;
+    //var dataStr = obj.id;
+    var dataStr = obj.site.publisher.id;
 
-    flumeClient.write(obj.id + "\n", function() {
+    flumeClient.write(dataStr + "\n", function() {
         writeResponse(response);
     });
+
 }
 
 
