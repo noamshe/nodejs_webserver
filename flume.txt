@@ -1,0 +1,1 @@
+sudo flume-ng agent --conf conf --conf-file config-syslog.conf --name a1 -Dflume.root.logger=INFO,console
