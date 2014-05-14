@@ -1,5 +1,6 @@
 
 var cluster = require('cluster');
+var uuid = require('node-uuid');
 var numCPUs = (process.argv[5]) ? process.argv[5] : require('os').cpus().length;
 var sys = require("sys"),
 my_http = require("http");
@@ -112,9 +113,17 @@ function jsonParser(json, response) {
     //var str = '{"id": "6495"}';
 
 // parse str into an object
-    var obj = JSON.parse(json);
+    //var obj = JSON.parse(json);
     //var dataStr = obj.id;
-    var dataStr = obj.site.publisher.id;
+    //var dataStr = obj.site.publisher.id;
+    // replace T with space and delete the dot and everything after
+    var uuid1 = uuid.v1();
+    //var uuid1 = "c654ec1-7f8f-11e3-ae96-b385f4bc450c";
+    //var uuid1 = "123";
+    var utcTimestamp = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
+    var dataStr = "{\"uuid\":\"" + uuid1 + "\",bid_request:{" + json + "},timestamp:\"" + utcTimestamp + "\"}";
+    dataStr = dataStr.replace(/\n/g, '');
+
 
     flumeClient.write(dataStr + "\n", function() {
         writeResponse(response);
