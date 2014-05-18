@@ -67,7 +67,7 @@ if (cluster.isMaster) {
 
 
 function handleRequest(request, response) {
-    if (request.method == 'POST') {
+    //if (request.method == 'POST') {
         var body = '';
         request.on('data', function (data) {
             body += data;
@@ -76,6 +76,7 @@ function handleRequest(request, response) {
             }
         });
         request.on('end', function () {
+            writeResponse(response); 
             jsonParser(body, response);
             /*if (useCppModule) {
                 modulename.callback(false, function(err, result) {
@@ -87,7 +88,7 @@ function handleRequest(request, response) {
                 });
             }*/
         });
-    }
+    //}
 }
 
 function xmlParserNodeJSModule(xml, response) {
@@ -121,19 +122,20 @@ function jsonParser(json, response) {
     //var uuid1 = "c654ec1-7f8f-11e3-ae96-b385f4bc450c";
     //var uuid1 = "123";
     var utcTimestamp = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
-    var dataStr = "{\"uuid\":\"" + uuid1 + "\",bid_request:{" + json + "},timestamp:\"" + utcTimestamp + "\"}";
+    var dataStr = "{\"uuid\":\"" + uuid1 + "\",\"bid_request\":" + json + ",\"timestamp\":\"" + utcTimestamp + "\"}";
+    //var dataStr = "{\"uuid\":\"" + uuid1 + "\",\"bid_request\":\"json\",\"timestamp\":\"" + utcTimestamp + "\"}";
+    //var dataStr = "{\"uuid\":\"" + uuid1 + "\",\"bid_request\":{\"id\":\"222\"},\"timestamp\":\"" + utcTimestamp + "\"}";
     dataStr = dataStr.replace(/\n/g, '');
 
 
     flumeClient.write(dataStr + "\n", function() {
-        writeResponse(response);
+        //writeResponse(response);
     });
-
 }
 
 
 function writeResponse(response) {
-    response.writeHeader(204, {"Content-Type": "text/plain"});
+    response.writeHeader(202, {"Content-Type": "text/plain"});
     response.write("no-bid");
     response.end();
 }
